@@ -1,0 +1,83 @@
+╭─mandragore@archibald ~
+╰─➤  podman run -it -v /dev/net/tun:/dev/net/tun --cap-add=NET_ADMIN --rm archlinux bash
+[root@a3914b796881 /]# ip tuntap add mode tun
+[root@a3914b796881 /]# ip link set tun0 up
+[root@a3914b796881 /]# ip l
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN mode DEFAULT group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+2: tap0: <BROADCAST,UP,LOWER_UP> mtu 65520 qdisc fq_codel state UNKNOWN mode DEFAULT group default qlen 1000
+    link/ether 32:42:bc:7e:31:4d brd ff:ff:ff:ff:ff:ff
+3: tun0: <NO-CARRIER,POINTOPOINT,MULTICAST,NOARP,UP> mtu 1500 qdisc fq_codel state DOWN mode DEFAULT group default qlen 500
+    link/none
+[root@a3914b796881 /]# ip a add 192.168.54.1 dev tun0
+[root@a3914b796881 /]# ip a
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+    inet6 ::1/128 scope host
+       valid_lft forever preferred_lft forever
+2: tap0: <BROADCAST,UP,LOWER_UP> mtu 65520 qdisc fq_codel state UNKNOWN group default qlen 1000
+    link/ether 32:42:bc:7e:31:4d brd ff:ff:ff:ff:ff:ff
+    inet 10.0.2.100/24 brd 10.0.2.255 scope global tap0
+       valid_lft forever preferred_lft forever
+    inet6 fe80::3042:bcff:fe7e:314d/64 scope link
+       valid_lft forever preferred_lft forever
+3: tun0: <NO-CARRIER,POINTOPOINT,MULTICAST,NOARP,UP> mtu 1500 qdisc fq_codel state DOWN group default qlen 500
+    link/none
+    inet 192.168.54.1/32 scope global tun0
+       valid_lft forever preferred_lft forever
+[root@a3914b796881 /]# ping 192.168.54.1
+PING 192.168.54.1 (192.168.54.1) 56(84) bytes of data.
+64 bytes from 192.168.54.1: icmp_seq=1 ttl=64 time=0.076 ms
+64 bytes from 192.168.54.1: icmp_seq=2 ttl=64 time=0.063 ms
+^C
+--- 192.168.54.1 ping statistics ---
+2 packets transmitted, 2 received, 0% packet loss, time 1017ms
+rtt min/avg/max/mdev = 0.063/0.069/0.076/0.006 ms
+[root@a3914b796881 /]# ip r
+default via 10.0.2.2 dev tap0
+10.0.2.0/24 dev tap0 proto kernel scope link src 10.0.2.100
+[root@a3914b796881 /]# ip r add 192.168.54.100 dev tun0
+[root@a3914b796881 /]# ip r
+default via 10.0.2.2 dev tap0
+10.0.2.0/24 dev tap0 proto kernel scope link src 10.0.2.100
+192.168.54.100 dev tun0 scope link linkdown
+		       ip r add 192.168.54.0/24 proto kernel dev tun0
+
+[root@a3914b796881 /]# ipython
+Python 3.9.6 (default, Jun 30 2021, 10:22:16)
+Type 'copyright', 'credits' or 'license' for more information
+IPython 7.25.0 -- An enhanced Interactive Python. Type '?' for help.
+
+In [13]: f = open("/dev/net/tun", "r+b", buffering=0)
+
+In [14]: import fcntl
+
+In [15]: import struct
+
+In [17]: ifr = struct.pack("16sH", b"tun0", 0x0001 | 0x1000)
+
+In [18]: ifr
+Out[18]: b'tun0\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01\x10'
+
+In [19]: fcntl.ioctl(f, 0x400454ca, ifr)
+Out[19]: b'tun0\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01\x10'
+
+In [20]: f.read(1024)
+Out[20]: b'`\x00\x00\x00\x00\x08:\xff\xfe\x80\x00\x00\x00\x00\x00\x00\x0bW\xaf\xaa\xfc\x15\xa6\xaf\xff\x02\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x02\x85\x00\x1fp\x00\x00\x00\x00'
+
+ip r add 192.168.54.0/24 dev tuntest
+
+or even better:
+
+ip r add 192.168.54.0/24 proto kernel dev tuntest
+
+
+to delete route
+
+ip r del <prefix>
+
+to delete device
+
+ip tuntap del dev tun0 mode tun
