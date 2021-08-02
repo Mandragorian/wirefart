@@ -1,6 +1,6 @@
 use std::io::Read;
 
-use wirefart_tun::Tuntap;
+use wirefart_tun::tuntap::Tuntap;
 
 fn main() {
     let mut tun = Tuntap::allocate_and_attach(Some([b't', b'u', b'n', b't', b'e', b's', b't', 0, 0, 0, 0 ,0 ,0 ,0 ,0 , 0]), 0x00001 | 0x1000).unwrap();

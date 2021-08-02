@@ -2,7 +2,7 @@ use std::os::unix::io::AsRawFd;
 
 use nix::ioctl_readwrite_bad;
 
-use ctypes::{c_short, ifreq, IFName};
+use crate::ctypes::{c_short, ifreq, IFName};
 
 const TUNSETIFF: u32 = 0x400454ca;
 
