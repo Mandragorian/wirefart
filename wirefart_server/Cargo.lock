@@ -55,9 +55,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "wirefart_ip"
+version = "0.1.0"
+
+[[package]]
 name = "wirefart_server"
 version = "0.1.0"
 dependencies = [
+ "wirefart_ip",
  "wirefart_tun",
 ]
 

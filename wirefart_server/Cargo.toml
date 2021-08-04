@@ -7,3 +7,4 @@ edition = "2018"
 
 [dependencies]
 wirefart_tun = { path = "../wirefart_tun" }
+wirefart_ip = { path = "../wirefart_ip" }
